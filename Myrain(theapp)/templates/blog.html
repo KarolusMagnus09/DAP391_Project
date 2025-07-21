@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Welcome To Blog</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: auto;
+            overflow-y: auto;
+            background-color: #142038;
+            font-family: 'Arial', sans-serif;
+        }
+        .navbar {
+            background-color: #142038;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px;
+            z-index: 1000;
+            text-align: center;
+        }
+        .blog-section {
+            background-color: #e4eaf2;
+            padding-top: 80px;
+            padding-bottom: 40px;
+            text-align: center;
+            color: #1a2a44;
+            min-height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+        h1 {
+            font-size: 2.5em;
+            margin: 10px 0;
+        }
+        h2 {
+            font-size: 1.5em;
+            color: #1e90ff;
+            margin: 15px 0;
+        }
+        p {
+            max-width: 700px;
+            margin: 15px auto;
+            line-height: 1.6;
+            text-align: left;
+        }
+        .link-wrapper {
+            display: inline-block;
+            margin: 0 16px;
+        }
+        .weather-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); /* Dynamic columns, min 100px each */
+            gap: 10px; /* Add gap between boxes */
+            margin-top: 20px;
+            max-width: 620px; /* Adjusted for 6 boxes with gaps */
+            margin-left: auto;
+            margin-right: auto;
+            justify-content: center; /* Center the grid */
+        }
+        .weather-window {
+            background-color: white;
+            padding: 10px; /* Increased padding for better text visibility */
+            border-radius: 5px; /* Slightly larger radius for modern look */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Softer shadow */
+            width: 100%; /* Full width of grid cell */
+            height: 100px; /* Consistent height */
+            text-align: center;
+            font-size: 0.9em; /* Slightly larger font for readability */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow: hidden; 
+        }
+        #map {
+            height: 400px;
+            width: 600px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            margin: 20px auto;
+        }
+        .city-input {
+            padding: 10px;
+            margin: 10px;
+            font-size: 1em;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        .update-button {
+            padding: 10px 20px;
+            background-color: #00ced1;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .update-button:hover {
+            background-color: #1e90ff;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        {% for name, normal, active in [
+            ("Index", "index.png", "index2.png"),
+            ("Predict", "predict.png", "predict2.png"),
+            ("About", "about.png", "about2.png"),
+            ("Blog", "blog.png", "blog2.png")
+        ] %}
+            <a href="{{ '/' if name == 'Index' else url_for(name.lower()) }}">
+                <div class="link-wrapper">
+                    <div class="fallback">{{ name }}</div>
+                    <div class="img-wrapper">
+                        <img src="{{ url_for('static', filename=normal) }}" class="normal">
+                    </div>
+                </div>
+            </a>
+        {% endfor %}
+    </nav>
+
+    <section class="blog-section" id="blog">
+        <h1>Blog</h1>
+        <p></p>
+
+        <h2>Interactive Weather Checker</h2>
+        <p style="text-align: center;">Choose which Country Want To Check It's Current Data</p>
+        <input type="text" id="cityInput" class="city-input" placeholder="Enter city name (e.g., Hanoi)">
+        <button onclick="updateWeather()" class="update-button">Update Weather</button>
+
+        <div id="map"></div>
+        <div class="weather-container">
+            <div class="weather-window" id="tempWindow">Temp: Loading...</div>
+            <div class="weather-window" id="humidityWindow">Hum: Loading...</div>
+            <div class="weather-window" id="windWindow">Wind: Loading...</div>
+            <div class="weather-window" id="pressureWindow">Pres: Loading...</div>
+            <div class="weather-window" id="cloudWindow">Cloud: Loading...</div>
+            <div class="weather-window" id="windDirWindow">Wind Dir: Loading...</div>
+            <div class="weather-window" id="latWindow">Lat: Loading...</div>
+            <div class="weather-window" id="lonWindow">Lon: Loading...</div>
+        </div>
+
+        <p>Check back daily for new weather updates and analysis!</p>
+    </section>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script>
+        const apiKey = 'ed871980da04670196858eeec8601527';
+        let map;
+
+        // Convert degrees to cardinal direction
+        function degToCompass(num) {
+            const val = Math.floor((num / 22.5) + 0.5);
+            const arr = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"];
+            return arr[(val % 16)];
+        }
+
+        // Initialize map
+        function initMap(lat, lon) {
+            if (map) map.remove(); // Remove existing map if it exists
+            map = L.map('map').setView([lat, lon], 10);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            // Add OpenWeatherMap precipitation layer
+            L.tileLayer(`https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=${apiKey}`, {
+                maxZoom: 19,
+                opacity: 0.7,
+                attribution: 'Weather data © <a href="https://openweathermap.org/">OpenWeatherMap</a>'
+            }).addTo(map);
+        }
+
+        // Update weather data and map
+        function updateWeather() {
+            const city = document.getElementById('cityInput').value;
+            if (!city) {
+                alert('Please enter a city name!');
+                return;
+            }
+
+            const apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.cod === 200) {
+                        const lat = data.coord.lat;
+                        const lon = data.coord.lon;
+                        initMap(lat, lon);
+
+                        document.getElementById('tempWindow').textContent = `Temp: ${data.main.temp}°C`;
+                        document.getElementById('humidityWindow').textContent = `Hum: ${data.main.humidity}%`;
+                        document.getElementById('windWindow').textContent = `Wind: ${data.wind.speed} m/s`;
+                        document.getElementById('pressureWindow').textContent = `Pres: ${data.main.pressure} hPa`;
+                        document.getElementById('cloudWindow').textContent = `Cloud: ${data.clouds.all}%`;
+                        document.getElementById('windDirWindow').textContent = `Wind Dir: ${degToCompass(data.wind.deg)}`;
+                        document.getElementById('latWindow').textContent = `Lat: ${lat.toFixed(2)}°`;
+                        document.getElementById('lonWindow').textContent = `Lon: ${lon.toFixed(2)}°`;
+                    } else {
+                        alert('City not found! Please try again.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching weather data:', error);
+                    alert('An error occurred. Please try again later.');
+                });
+        }
+
+        // Initial load with Hanoi
+        window.onload = function() {
+            document.getElementById('cityInput').value = 'Hanoi';
+            updateWeather();
+        };
+    </script>
+</body>
+</html>

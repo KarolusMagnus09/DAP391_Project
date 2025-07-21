@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>About Rainfall Prediction</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: auto;
+            overflow-y: auto;
+            background-color: #142038;
+            font-family: 'Arial', sans-serif;
+        }
+        .navbar {
+            background-color: #142038;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px;
+            z-index: 1;
+            text-align: center;
+        }
+        .about-section {
+            background-color: #e4eaf2;
+            padding-top: 80px;
+            padding-bottom: 40px;
+            text-align: center;
+            color: #1a2a44;
+            min-height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+        h1 {
+            font-size: 2.5em;
+            margin: 10px 0;
+        }
+        h2 {
+            font-size: 1.5em;
+            color: #1e90ff;
+            margin: 15px 0;
+        }
+        p {
+            max-width: 700px;
+            margin: 15px auto;
+            line-height: 1.6;
+            text-align: left;
+        }
+        .link-wrapper {
+            display: inline-block;
+            margin: 0 16px;
+        }
+        .next-page {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #00ced1;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .next-page:hover {
+            background-color: #1e90ff;
+        }
+        .credits {
+            font-size: 0.8em;
+            color: #666;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        {% for name, normal, active in [
+            ("Index", "index.png", "index2.png"),
+            ("Predict", "predict.png", "predict2.png"),
+            ("About", "about.png", "about2.png"),
+            ("Blog", "blog.png", "blog2.png"),
+        ] %}
+            <a href="{{ '/' if name == 'Index' else url_for(name.lower()) }}">
+                <div class="link-wrapper">
+                    <div class="fallback">{{ name }}</div>
+                    <div class="img-wrapper">
+                        <img src="{{ url_for('static', filename=normal) }}" class="normal">
+                    </div>
+                </div>
+            </a>
+        {% endfor %}
+    </nav>
+
+    <section class="about-section" id="about">
+        <h1>About Rainfall</h1>
+
+        <h2>What is Rainfall?</h2>
+        <p>Rainfall is a form of precipitation where water droplets fall from clouds to the Earth’s surface. It occurs when moist air rises, cools, and condenses into water vapor, forming droplets that combine to create larger drops. When these drops become heavy enough, they fall due to gravity. Rainfall is essential for replenishing freshwater supplies, supporting agriculture, and maintaining ecosystems. It plays a critical role in the water cycle, helping to distribute moisture across the globe. The amount, intensity, and frequency of rainfall vary based on geographic location, climate, and seasonal variations. For example, tropical regions experience heavy, consistent rainfall, while arid regions receive minimal rainfall. Rainfall patterns are influenced by factors like temperature, humidity, atmospheric pressure, and wind patterns, affecting weather systems and climate change.</p>
+
+        <h2>Way Forward</h2>
+        <p>To manage and ensure sustainable rainfall, it is essential to enhance water conservation, improve infrastructure for efficient water storage, and implement climate-resilient agricultural practices. Additionally, monitoring rainfall patterns and adapting to changing climatic conditions will help mitigate the impacts of both excess and scarcity of rainfall.</p>
+
+        <h2>How Rainfall Affects Crop Health</h2>
+        <p>Rain is usually seen as a benefit to crops and fields, but there is an “ideal” amount of rainfall in any given growing season for most crops. If the average rainfall is much lower or higher than the ideal, it can lead to significant problems, from drowned crops to lower yields.</p>
+        <p><strong>Disease + Mold</strong>: If crops are too wet, they could start to mold or catch a fungus. The soil can also collect bacteria, mold, and fungus, which can be absorbed by the plant. Poor drainage and irrigation systems can exacerbate these growths. Rain can spread pathogens, pests, and diseases, potentially affecting yield or rendering an entire field unusable.</p>
+        <p><strong>Growth from Seed</strong>: Rainfall determines how fast a crop grows from seed, including harvest readiness. A good balance of rain and irrigation can reduce germination time and the period between seeding and harvest, supporting the crop’s lifecycle.</p>
+
+        <h2>Soil Health</h2>
+        <p>Soil is greatly affected by rainfall. If it is too wet or too dry, nutrients can run off and fail to reach plant roots, leading to poor growth and health. Overwatering or excessive rain can also promote bacteria, fungus, and mold growth in the soil.</p>
+
+        <h2>Crop Output</h2>
+        <p>Balancing proper watering, preventing disease and mold, and maintaining optimal soil moisture are key to maximizing crop yield. The right amount of rainfall can lead to healthier, larger crops. Sigfox-enabled sensors can help farmers track and predict weather conditions and rainfall, improving crop health.</p>
+
+        <h2>The Role of Crops in Vietnam</h2>
+        <p>According to statistics, agriculture has contributed about 12–14% to Vietnam’s GDP in recent years. Although this proportion is no longer dominant compared to other sectors, the absolute value that agriculture brings continues to grow.</p>
+
+        <h2>How Does Predicting Rainfalls Help Anything?</h2>
+        <p>If farmers know heavy rain is coming, they can delay planting to avoid crop loss.</p> 
+        <p>~Ex:
+           <p>* Flood prevention: Authorities can prepare sandbags and evacuate areas if heavy rainfall is predicted.</p>
+           <p>* Irrigation planning: Farmers can skip watering crops when rain is expected, saving water and cost.</p>
+           <p>* Construction safety: Builders can delay concrete pouring or outdoor work during expected rain.</p> 
+           <p>* Event planning: Outdoor events can be rescheduled or moved indoors to avoid disruptions.</p> 
+           <p>* Travel safety: Drivers and airlines can adjust routes or schedules to avoid hazardous conditions.</p> 
+           <p>* Reservoir management: Water managers can release or store water in dams ahead of heavy rainfall.</p> 
+        </p>
+
+        <h2>Conclusion</h2>
+        <p>Rainfall plays a vital role in sustaining life on Earth by providing water for ecosystems, agriculture, and human needs. It regulates climate, supports biodiversity, and helps mitigate natural disasters. Understanding rainfall patterns is crucial for managing resources and ensuring a sustainable future.</p>
+
+        <p>Learn more about our approach and data sources by exploring further. Ready to dive into daily updates?</p>
+        <a href="{{ url_for('blog') }}" class="next-page">Go to Blog</a>
+
+        <div class="credits">
+            Sources: <a href="https://www.nextias.com/blog/rainfall/">nextias.com</a>, <a href="https://nongnghiephuuco.vn">nongnghiephuuco.vn</a>
+        </div>
+    </section>
+</body>
+</html>

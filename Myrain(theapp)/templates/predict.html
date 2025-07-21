@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Rainfall Prediction</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: auto;
+            overflow-y: auto;
+            background-color: #142038;
+            font-family: 'Arial', sans-serif;
+        }
+        .navbar {
+            background-color: #142038;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px;
+            z-index: 1000;
+            text-align: center;
+        }
+        .predict-section {
+            background-color: #e4eaf2;
+            padding-top: 80px;
+            padding-bottom: 40px;
+            text-align: center;
+            color: #1a2a44;
+            min-height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+        h1 {
+            font-size: 2.5em;
+            margin: 10px 0;
+        }
+        h2 {
+            font-size: 1.5em;
+            color: #1e90ff;
+            margin: 15px 0;
+        }
+        p {
+            max-width: 700px;
+            margin: 15px auto;
+            line-height: 1.6;
+            text-align: left;
+        }
+        .link-wrapper {
+            display: inline-block;
+            margin: 0 16px;
+        }
+        .predict-sidebar {
+            width: 90%;
+            max-width: 1200px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-height: 80vh;
+            overflow-y: auto;
+            margin: 20px auto;
+            display: block;
+        }
+        .input-group {
+            margin: 15px 0;
+            text-align: left;
+        }
+        .input-group label {
+            display: block;
+            font-size: 1.1em;
+            margin-bottom: 8px;
+        }
+        .input-group input, .input-group select, .input-group datalist {
+            width: 100%;
+            padding: 10px;
+            font-size: 1em;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+        .input-group select {
+            width: 100%;
+        }
+        .input-group .checkbox-label {
+            font-size: 0.9em;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+        }
+        .input-group .location-input-group {
+            display: flex;
+            gap: 10px;
+        }
+        .input-group .location-input-group input[type="text"] {
+            flex: 3;
+        }
+        .input-group .location-input-group button {
+            flex: 1;
+            padding: 10px;
+            background-color: #00ced1;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s;
+        }
+        .input-group .location-input-group button:hover {
+            background-color: #1e90ff;
+        }
+        #predictButton {
+            padding: 12px 30px;
+            background-color: #00ced1;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-size: 1.1em;
+            margin-top: 20px;
+        }
+        #predictButton:hover {
+            background-color: #1e90ff;
+        }
+        #result {
+            margin-top: 20px;
+            font-size: 1.2em;
+            color: #1a2a44;
+        }
+        #predictionComment {
+            margin-top: 10px;
+            font-size: 1em;
+            color: #1a2a44;
+            font-style: italic;
+        }
+        .hidden {
+            display: none;
+        }
+        .activity-section {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+        .activity-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            width: 90%;
+            margin-bottom: 15px;
+        }
+        .activity-item {
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            box-sizing: border-box;
+            min-width: 150px;
+        }
+        .activity-item .name {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        .activity-item .status-bar {
+            width: 100%;
+            height: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .activity-item .status-text {
+            font-size: 0.9em;
+            margin-top: 5px;
+            font-weight: bold;
+        }
+        .activity-item .status-bar.recommended { background-color: #90ee90; }
+        .activity-item .status-bar.moderate { background-color: #ffd700; }
+        .activity-item .status-bar.not-recommended { background-color: #ff6347; }
+        .activity-item .status-text.recommended { color: #90ee90; }
+        .activity-item .status-text.moderate { color: #ffd700; }
+        .activity-item .status-text.not-recommended { color: #ff6347; }
+        .forecast-section {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+        }
+        .simulated-forecast {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+        }
+        .simulated-card {
+            background-color: #f1f1f1;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            min-width: 80px;
+            cursor: pointer;
+        }
+        .simulated-card.editing {
+            background-color: #d3d3d3;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        {% for name, normal, active in [
+            ("Index", "index.png", "index2.png"),
+            ("Predict", "predict.png", "predict2.png"),
+            ("About", "about.png", "about2.png"),
+            ("Blog", "blog.png", "blog2.png")
+        ] %}
+            <a href="{{ '/' if name == 'Index' else url_for(name.lower()) }}">
+                <div class="link-wrapper">
+                    <div class="fallback">{{ name }}</div>
+                    <div class="img-wrapper">
+                        <img src="{{ url_for('static', filename=normal) }}" class="normal">
+                    </div>
+                </div>
+            </a>
+        {% endfor %}
+    </nav>
+
+    <section class="predict-section" id="predict">
+        <h1>Rainfall Prediction</h1>
+        <p>Enter weather and location data to predict rainfall (in mm) for a specific area.</p>
+
+        <h2>Prediction Tool</h2>
+        <div class="predict-sidebar">
+            <form id="predictForm">
+                <div class="input-group">
+                    <label for="humidi">Humidity (%):</label>
+                    <input type="number" id="humidi" min="0" max="100" step="1" required>
+                </div>
+                <div class="input-group">
+                    <label for="cloud">Cloud (%):</label>
+                    <input type="number" id="cloud" min="0" max="100" step="1" required>
+                </div>
+                <div class="input-group">
+                    <label for="pressure">Pressure (hPa):</label>
+                    <input type="number" id="pressure" min="900" max="1100" step="0.1" required>
+                </div>
+                <div class="input-group">
+                    <label for="season">Season:</label>
+                    <select id="season" required>
+                        <option value="" disabled selected>Select season</option>
+                        <option value="rainy">Rainy Season</option>
+                        <option value="dry">Dry Season</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="max_temp">Max Temp (°C):</label>
+                    <input type="number" id="max_temp" min="-50" max="60" step="0.1" required>
+                </div>
+                <div class="input-group">
+                    <label for="min_temp">Min Temp (°C):</label>
+                    <input type="number" id="min_temp" min="-50" max="60" step="0.1" required>
+                </div>
+                <div class="input-group">
+                    <label for="rain_1d_ago">Rain 1 Day Ago (mm):</label>
+                    <input type="number" id="rain_1d_ago" min="0" step="0.1" required>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="rain_1d_unknown" onclick="toggleRainInput('rain_1d')"> Don't know how it rained?
+                    </label>
+                    <select id="rain_1d_estimate" class="hidden" required>
+                        <option value="" disabled selected>Did it rain yesterday?</option>
+                        <option value="0">No rain</option>
+                        <option value="1">Light rain (< 3 mm), < 1 hour</option>
+                        <option value="2">Light rain (< 3 mm), 1-3 hours</option>
+                        <option value="2.5">Light rain (< 3 mm), > 3 hours</option>
+                        <option value="5">Moderate rain (3-25 mm), < 1 hour</option>
+                        <option value="10">Moderate rain (3-25 mm), 1-3 hours</option>
+                        <option value="15">Moderate rain (3-25 mm), > 3 hours</option>
+                        <option value="25">Heavy rain (> 25 mm), < 1 hour</option>
+                        <option value="35">Heavy rain (> 25 mm), 1-3 hours</option>
+                        <option value="50">Heavy rain (> 25 mm), > 3 hours</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="rain_2d_ago">Rain 2 Days Ago (mm):</label>
+                    <input type="number" id="rain_2d_ago" min="0" step="0.1" required>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="rain_2d_unknown" onclick="toggleRainInput('rain_2d')"> Don't know how it rained?
+                    </label>
+                    <select id="rain_2d_estimate" class="hidden" required>
+                        <option value="" disabled selected>Did it rain two days ago?</option>
+                        <option value="0">No rain</option>
+                        <option value="1">Light rain (< 3 mm), < 1 hour</option>
+                        <option value="2">Light rain (< 3 mm), 1-3 hours</option>
+                        <option value="2.5">Light rain (< 3 mm), > 3 hours</option>
+                        <option value="5">Moderate rain (3-25 mm), < 1 hour</option>
+                        <option value="10">Moderate rain (3-25 mm), 1-3 hours</option>
+                        <option value="15">Moderate rain (3-25 mm), > 3 hours</option>
+                        <option value="25">Heavy rain (> 25 mm), < 1 hour</option>
+                        <option value="35">Heavy rain (> 25 mm), 1-3 hours</option>
+                        <option value="50">Heavy rain (> 25 mm), > 3 hours</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="rain_trend_3d">Average Rain Over Last 3 Days (mm):</label>
+                    <input type="number" id="rain_trend_3d" min="0" step="0.1" required>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="rain_trend_3d_unknown" onclick="toggleRainInput('rain_trend_3d')"> Don't know the average?
+                    </label>
+                    <select id="rain_trend_3d_estimate" class="hidden" required>
+                        <option value="" disabled selected>How was the rain over the last 3 days?</option>
+                        <option value="0">No rain</option>
+                        <option value="2">Light rain (around 1-3 mm/day)</option>
+                        <option value="10">Moderate rain (around 3-25 mm/day)</option>
+                        <option value="30">Heavy rain (over 25 mm/day)</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="rain_intensity">Today's Rain Compared to Last 7 Days:</label>
+                    <input type="number" id="rain_intensity" min="0" step="0.1" required>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="rain_intensity_unknown" onclick="toggleRainInput('rain_intensity')"> Don't know the comparison?
+                    </label>
+                    <select id="rain_intensity_estimate" class="hidden" required>
+                        <option value="" disabled selected>How does today's rain compare?</option>
+                        <option value="0">No rain today</option>
+                        <option value="0.5">Less than recent days</option>
+                        <option value="1">Similar to recent days</option>
+                        <option value="2">More than recent days</option>
+                        <option value="5">Much more than recent days</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="wind_speed">Wind Speed (m/s):</label>
+                    <input type="number" id="wind_speed" min="0" step="0.1" required>
+                </div>
+                <div class="input-group">
+                    <label for="wind_direct">Wind Direction:</label>
+                    <input type="text" id="wind_direct" list="windDirections" required>
+                    <datalist id="windDirections">
+                        <option value="N">N (0°)</option>
+                        <option value="NNE">NNE (22.5°)</option>
+                        <option value="NE">NE (45°)</option>
+                        <option value="ENE">ENE (67.5°)</option>
+                        <option value="E">E (90°)</option>
+                        <option value="ESE">ESE (112.5°)</option>
+                        <option value="SE">SE (135°)</option>
+                        <option value="SSE">SSE (157.5°)</option>
+                        <option value="S">S (180°)</option>
+                        <option value="SSW">SSW (202.5°)</option>
+                        <option value="SW">SW (225°)</option>
+                        <option value="WSW">WSW (247.5°)</option>
+                        <option value="W">W (270°)</option>
+                        <option value="WNW">WNW (292.5°)</option>
+                        <option value="NW">NW (315°)</option>
+                        <option value="NNW">NNW (337.5°)</option>
+                    </datalist>
+                </div>
+                <div class="input-group">
+                    <label>Location:</label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="use_location_name" onclick="toggleLocationInput('name')"> Enter location name instead?
+                    </label>
+                    <div id="manual_coords">
+                        <div class="input-group">
+                            <label for="Longitude">Longitude (°):</label>
+                            <input type="number" id="Longitude" step="0.01" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="Latitude">Latitude (°):</label>
+                            <input type="number" id="Latitude" step="0.01" required>
+                        </div>
+                    </div>
+                    <div id="location_name_input" class="hidden">
+                        <div class="location-input-group">
+                            <input type="text" id="location_name" placeholder="e.g., New York, NY">
+                            <button type="button" onclick="getCoordinates()">Get Coordinates</button>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" id="predictButton" onclick="predictRainfall()">Predict Rainfall</button>
+                <div id="result">Predicted Rainfall: N/A mm</div>
+                <div id="predictionComment"></div>
+                <div class="forecast-section">
+                    <h3>Simulated 7-Day Forecast</h3>
+                    <div class="simulated-forecast" id="simulatedForecast"></div>
+                    <p>Click any day to customize temperature, humidity, and rainfall. Changes affect subsequent days!</p>
+                </div>
+                <div class="activity-section" id="activitySection" style="display: none;">
+                    <h3>Activities</h3>
+                    <div id="activityList"></div>
+                </div>
+            </form>
+        </div>
+
+        <p>Use this tool to forecast rainfall based on meteorological and geographic data!</p>
+    </section>
+
+    <script>
+        // Toggle between number input and dropdown based on checkbox
+        function toggleRainInput(prefix) {
+            const checkbox = document.getElementById(`${prefix}_unknown`);
+            const numberInput = document.getElementById(`${prefix}_ago`) || document.getElementById(prefix);
+            const selectInput = document.getElementById(`${prefix}_estimate`);
+            
+            if (checkbox.checked) {
+                numberInput.classList.add('hidden');
+                numberInput.removeAttribute('required');
+                selectInput.classList.remove('hidden');
+                selectInput.setAttribute('required', 'required');
+            } else {
+                numberInput.classList.remove('hidden');
+                numberInput.setAttribute('required', 'required');
+                selectInput.classList.add('hidden');
+                selectInput.removeAttribute('required');
+            }
+        }
+
+        // Toggle between manual coordinates and location name input
+        function toggleLocationInput(mode) {
+            const nameCheckbox = document.getElementById('use_location_name');
+            const manualCoords = document.getElementById('manual_coords');
+            const locationNameInput = document.getElementById('location_name_input');
+            const longitudeInput = document.getElementById('Longitude');
+            const latitudeInput = document.getElementById('Latitude');
+            const locationName = document.getElementById('location_name');
+
+            // Reset all inputs to hidden and not required
+            manualCoords.classList.add('hidden');
+            locationNameInput.classList.add('hidden');
+            longitudeInput.removeAttribute('required');
+            latitudeInput.removeAttribute('required');
+            locationName.removeAttribute('required');
+
+            if (mode === 'name' && nameCheckbox.checked) {
+                locationNameInput.classList.remove('hidden');
+                locationName.setAttribute('required', 'required');
+            } else {
+                nameCheckbox.checked = false;
+                manualCoords.classList.remove('hidden');
+                longitudeInput.setAttribute('required', 'required');
+                latitudeInput.setAttribute('required', 'required');
+            }
+
+            // Clear inputs when switching modes
+            locationName.value = '';
+            if (mode !== 'name') {
+                latitudeInput.value = '';
+                longitudeInput.value = '';
+            }
+        }
+
+        // Fetch coordinates from server endpoint
+        function getCoordinates() {
+            const locationName = document.getElementById('location_name').value.trim();
+            if (!locationName) {
+                alert('Please enter a location name (e.g., New York, NY).');
+                return;
+            }
+
+            fetch('/geocode', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ location: locationName })
+            })
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                return response.json();
+            })
+            .then(data => {
+                if (data.error) throw new Error(data.error);
+                document.getElementById('Latitude').value = parseFloat(data.lat).toFixed(2);
+                document.getElementById('Longitude').value = parseFloat(data.lon).toFixed(2);
+                alert(`Coordinates set: Latitude ${data.lat}, Longitude ${data.lon}`);
+            })
+            .catch(error => {
+                console.error('Error fetching coordinates:', error.message);
+                alert(`Failed to fetch coordinates: ${error.message}. Please enter coordinates manually or try another location.`);
+            });
+        }
+
+        // Prediction function with backend call and activity recommendations
+        function predictRainfall() {
+            const directionToAngle = {
+                'N': 0, 'NNE': 22.5, 'NE': 45, 'ENE': 67.5,
+                'E': 90, 'ESE': 112.5, 'SE': 135, 'SSE': 157.5,
+                'S': 180, 'SSW': 202.5, 'SW': 225, 'WSW': 247.5,
+                'W': 270, 'WNW': 292.5, 'NW': 315, 'NNW': 337.5
+            };
+
+            const humidi = parseFloat(document.getElementById('humidi').value);
+            const cloud = parseFloat(document.getElementById('cloud').value);
+            const pressure = parseFloat(document.getElementById('pressure').value);
+            const season = document.getElementById('season').value;
+            const max_temp = parseFloat(document.getElementById('max_temp').value);
+            const min_temp = parseFloat(document.getElementById('min_temp').value);
+            const rain_1d_unknown = document.getElementById('rain_1d_unknown').checked;
+            const rain_1d_ago = rain_1d_unknown ? 
+                parseFloat(document.getElementById('rain_1d_estimate').value) : 
+                parseFloat(document.getElementById('rain_1d_ago').value);
+            const rain_2d_unknown = document.getElementById('rain_2d_unknown').checked;
+            const rain_2d_ago = rain_2d_unknown ? 
+                parseFloat(document.getElementById('rain_2d_estimate').value) : 
+                parseFloat(document.getElementById('rain_2d_ago').value);
+            const rain_trend_3d_unknown = document.getElementById('rain_trend_3d_unknown').checked;
+            const rain_trend_3d = rain_trend_3d_unknown ? 
+                parseFloat(document.getElementById('rain_trend_3d_estimate').value) : 
+                parseFloat(document.getElementById('rain_trend_3d').value);
+            const rain_intensity_unknown = document.getElementById('rain_intensity_unknown').checked;
+            const rain_intensity = rain_intensity_unknown ? 
+                parseFloat(document.getElementById('rain_intensity_estimate').value) : 
+                parseFloat(document.getElementById('rain_intensity').value);
+            const wind_speed = parseFloat(document.getElementById('wind_speed').value);
+            let wind_direct = document.getElementById('wind_direct').value;
+            const Longitude = parseFloat(document.getElementById('Longitude').value);
+            const Latitude = parseFloat(document.getElementById('Latitude').value);
+
+            const is_rainy_season = season === 'rainy' ? 1 : 0;
+            const is_dry_season = season === 'dry' ? 1 : 0;
+            wind_direct = wind_direct.split(' ')[0].toUpperCase();
+
+            const cloud_humid = humidi * cloud;
+            const range_temp = max_temp - min_temp;
+            const wind_angle = directionToAngle[wind_direct] || 0;
+            const theta = wind_angle * Math.PI / 180;
+            const wind_x = wind_speed * Math.cos(theta);
+            const wind_y = wind_speed * Math.sin(theta);
+
+            const inputs = {
+                humidi, cloud, pressure, cloud_humid,
+                is_rainy_season, is_dry_season, max_temp,
+                min_temp, range_temp, rain_1d_ago,
+                rain_2d_ago, rain_trend_3d, rain_intensity,
+                wind_x, wind_y, Longitude, Latitude
+            };
+
+            for (let key in inputs) {
+                if (isNaN(inputs[key]) || inputs[key] === null) {
+                    alert(`Please fill in a valid value for ${key}. If using a location name, fetch coordinates first.`);
+                    return;
+                }
+            }
+
+            if (!season) {
+                alert("Please select a season.");
+                return;
+            }
+
+            if (!wind_direct) {
+                alert("Please enter or select a wind direction.");
+                return;
+            }
+
+            fetch('/predict', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(inputs)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                    document.getElementById('result').textContent = `Error: ${data.error}`;
+                    document.getElementById('predictionComment').textContent = '';
+                    document.getElementById('activitySection').style.display = 'none';
+                } else {
+                    const rainfall = data.rain.toFixed(2);
+                    document.getElementById('result').textContent = `Predicted Rainfall: ${rainfall} mm`;
+
+                    let comment = '';
+                    if (rainfall < 3.0) comment = 'Just a light sprinkle! No need for an umbrella.';
+                    else if (rainfall < 8.0) comment = 'A bit of rain is coming. Grab a light jacket!';
+                    else if (rainfall < 25.0) comment = 'Moderate rain alert! Use an umbrella.';
+                    else if (rainfall < 50.0) comment = 'Heavy rain ahead! Wear rain boots.';
+                    else comment = 'Very heavy rain! Postpone outdoor plans.';
+                    document.getElementById('predictionComment').textContent = comment;
+
+                    const activitySection = document.getElementById('activitySection');
+                    activitySection.style.display = 'block';
+                    const activityList = document.getElementById('activityList');
+                    activityList.innerHTML = '';
+
+                    const activities = [
+                        { name: 'Walking' }, { name: 'Cycling' }, { name: 'Picnic' },
+                        { name: 'Hiking' }, { name: 'Fishing' }, { name: 'Beaches' },
+                        { name: 'Football' }, { name: 'Dust & Dander', reverse: true }
+                    ];
+
+                    const topRow = document.createElement('div');
+                    topRow.className = 'activity-row';
+                    const bottomRow = document.createElement('div');
+                    bottomRow.className = 'activity-row';
+
+                    activities.forEach((activity, index) => {
+                        let statusClass = activity.reverse ?
+                            (rainfall < 5 ? 'not-recommended' : rainfall <= 20 ? 'moderate' : 'recommended') :
+                            (rainfall < 5 ? 'recommended' : rainfall <= 20 ? 'moderate' : 'not-recommended');
+
+                        const activityItem = document.createElement('div');
+                        activityItem.className = 'activity-item';
+                        activityItem.innerHTML = `
+                            <div class="name">${activity.name}</div>
+                            <div class="status-bar ${statusClass}"></div>
+                            <div class="status-text ${statusClass}">${statusClass.charAt(0).toUpperCase() + statusClass.slice(1).replace('-', ' ')}</div>
+                        `;
+                        if (index < 4) topRow.appendChild(activityItem);
+                        else bottomRow.appendChild(activityItem);
+                    });
+
+                    activityList.appendChild(topRow);
+                    activityList.appendChild(bottomRow);
+
+                    const simulatedForecast = document.getElementById('simulatedForecast');
+                    simulatedForecast.innerHTML = '';
+                    for (let day = 1; day <= 7; day++) {
+                        const rainImpact = rainfall / 50;
+                        const tempDrop = rainImpact * 2 * (1 - (day - 1) / 6);
+                        const humidIncrease = rainImpact * 20 * (1 - (day - 1) / 6);
+                        const baseTemp = (max_temp + min_temp) / 2 || 25;
+                        const baseHumidity = humidi || 50;
+                        const newTempMax = Math.max(0, baseTemp + 5 - tempDrop);
+                        const newTempMin = Math.max(0, baseTemp - 5 - tempDrop);
+                        const newHumidity = Math.min(100, baseHumidity + humidIncrease);
+                        const newDesc = rainfall > 25 ? 'heavy rain' : rainfall > 10 ? 'moderate rain' : rainfall > 0 ? 'light rain' : 'clear';
+
+                        const card = document.createElement('div');
+                        card.className = 'simulated-card';
+                        card.dataset.day = day;
+                        card.dataset.tempMax = newTempMax.toFixed(1);
+                        card.dataset.tempMin = newTempMin.toFixed(1);
+                        card.dataset.humidity = newHumidity.toFixed(1);
+                        card.dataset.desc = newDesc;
+                        card.dataset.rain = rainfall;
+                        card.innerHTML = `<div>Day ${day}</div><div>Max: ${newTempMax.toFixed(1)}°C</div><div>Min: ${newTempMin.toFixed(1)}°C</div><div>${newDesc}</div><div>Hum: ${newHumidity.toFixed(1)}%</div><div>Rain: ${rainfall}mm</div>`;
+                        simulatedForecast.appendChild(card);
+                    }
+
+                    const cards = simulatedForecast.getElementsByClassName('simulated-card');
+                    for (let card of cards) {
+                        card.onclick = function() {
+                            const day = parseInt(this.dataset.day);
+                            let newTempMax = prompt(`Enter new Max Temp (°C) for Day ${day} (current: ${this.dataset.tempMax}):`, this.dataset.tempMax);
+                            let newTempMin = prompt(`Enter new Min Temp (°C) for Day ${day} (current: ${this.dataset.tempMin}):`, this.dataset.tempMin);
+                            let newHumidity = prompt(`Enter new Humidity (%) for Day ${day} (current: ${this.dataset.humidity}):`, this.dataset.humidity);
+                            let newRain = prompt(`Enter new Rainfall (mm) for Day ${day} (current: ${this.dataset.rain}):`, this.dataset.rain);
+                            if (newTempMax === null || newTempMin === null || newHumidity === null || newRain === null) return;
+
+                            newTempMax = parseFloat(newTempMax) || parseFloat(this.dataset.tempMax);
+                            newTempMin = parseFloat(newTempMin) || parseFloat(this.dataset.tempMin);
+                            newHumidity = parseFloat(newHumidity) || parseFloat(this.dataset.humidity);
+                            newRain = parseFloat(newRain) || parseFloat(this.dataset.rain);
+                            newTempMax = Math.max(-50, Math.min(newTempMax, 60));
+                            newTempMin = Math.max(-50, Math.min(newTempMin, 60));
+                            newHumidity = Math.max(0, Math.min(newHumidity, 100));
+                            newRain = Math.max(0, Math.min(newRain, 100));
+
+                            const oldTempMax = parseFloat(this.dataset.tempMax);
+                            const oldTempMin = parseFloat(this.dataset.tempMin);
+                            const oldHumidity = parseFloat(this.dataset.humidity);
+                            const oldRain = parseFloat(this.dataset.rain);
+                            this.dataset.tempMax = newTempMax.toFixed(1);
+                            this.dataset.tempMin = newTempMin.toFixed(1);
+                            this.dataset.humidity = newHumidity.toFixed(1);
+                            this.dataset.rain = newRain.toFixed(1);
+                            this.dataset.desc = newRain > 25 ? 'heavy rain' : newRain > 10 ? 'moderate rain' : newRain > 0 ? 'light rain' : 'clear';
+                            this.innerHTML = `<div>Day ${day}</div><div>Max: ${this.dataset.tempMax}°C</div><div>Min: ${this.dataset.tempMin}°C</div><div>${this.dataset.desc}</div><div>Hum: ${this.dataset.humidity}%</div><div>Rain: ${this.dataset.rain}mm</div>`;
+
+                            for (let nextCard of cards) {
+                                const nextDay = parseInt(nextCard.dataset.day);
+                                if (nextDay > day) {
+                                    const dayDiff = nextDay - day;
+                                    const decay = 1 - dayDiff / 6;
+                                    nextCard.dataset.tempMax = (parseFloat(nextCard.dataset.tempMax) + (newTempMax - oldTempMax) * decay).toFixed(1);
+                                    nextCard.dataset.tempMin = (parseFloat(nextCard.dataset.tempMin) + (newTempMin - oldTempMin) * decay).toFixed(1);
+                                    nextCard.dataset.humidity = (parseFloat(nextCard.dataset.humidity) + (newHumidity - oldHumidity) * decay).toFixed(1);
+                                    nextCard.dataset.rain = (parseFloat(nextCard.dataset.rain) + (newRain - oldRain) * decay).toFixed(1);
+                                    nextCard.dataset.desc = parseFloat(nextCard.dataset.rain) > 25 ? 'heavy rain' : parseFloat(nextCard.dataset.rain) > 10 ? 'moderate rain' : parseFloat(nextCard.dataset.rain) > 0 ? 'light rain' : 'clear';
+                                    nextCard.dataset.tempMax = Math.max(-50, Math.min(parseFloat(nextCard.dataset.tempMax), 60)).toFixed(1);
+                                    nextCard.dataset.tempMin = Math.max(-50, Math.min(parseFloat(nextCard.dataset.tempMin), 60)).toFixed(1);
+                                    nextCard.dataset.humidity = Math.max(0, Math.min(parseFloat(nextCard.dataset.humidity), 100)).toFixed(1);
+                                    nextCard.dataset.rain = Math.max(0, Math.min(parseFloat(nextCard.dataset.rain), 100)).toFixed(1);
+                                    nextCard.innerHTML = `<div>Day ${nextDay}</div><div>Max: ${nextCard.dataset.tempMax}°C</div><div>Min: ${nextCard.dataset.tempMin}°C</div><div>${nextCard.dataset.desc}</div><div>Hum: ${nextCard.dataset.humidity}%</div><div>Rain: ${nextCard.dataset.rain}mm</div>`;
+                                }
+                            }
+                        };
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while predicting. Using client-side fallback.');
+                document.getElementById('result').textContent = 'Predicted Rainfall: N/A mm';
+                document.getElementById('predictionComment').textContent = '';
+                document.getElementById('activitySection').style.display = 'none';
+
+                const rainfall = (humidi * 0.1 + cloud * 0.15 + (1013 - pressure) * 0.2 + 
+                                 (max_temp - min_temp) * 0.1 + rain_1d_ago * 0.2 + rain_2d_ago * 0.15 + 
+                                 rain_trend_3d * 0.1 + rain_intensity * 5 + wind_speed * 0.05) * 
+                                (season === 'rainy' ? 1.5 : 0.5);
+                const finalRainfall = Math.max(0, Math.min(rainfall, 100)).toFixed(2);
+                document.getElementById('result').textContent = `Predicted Rainfall: ${finalRainfall} mm`;
+
+                let comment = '';
+                if (finalRainfall < 3.0) comment = 'Just a light sprinkle! No need for an umbrella.';
+                else if (finalRainfall < 8.0) comment = 'A bit of rain is coming. Grab a light jacket!';
+                else if (finalRainfall < 25.0) comment = 'Moderate rain alert! Use an umbrella.';
+                else if (finalRainfall < 50.0) comment = 'Heavy rain ahead! Wear rain boots.';
+                else comment = 'Very heavy rain! Postpone outdoor plans.';
+                document.getElementById('predictionComment').textContent = comment;
+
+                const simulatedForecast = document.getElementById('simulatedForecast');
+                simulatedForecast.innerHTML = '';
+                for (let day = 1; day <= 7; day++) {
+                    const rainImpact = finalRainfall / 50;
+                    const tempDrop = rainImpact * 2 * (1 - (day - 1) / 6);
+                    const humidIncrease = rainImpact * 20 * (1 - (day - 1) / 6);
+                    const baseTemp = (max_temp + min_temp) / 2 || 25;
+                    const baseHumidity = humidi || 50;
+                    const newTempMax = Math.max(0, baseTemp + 5 - tempDrop);
+                    const newTempMin = Math.max(0, baseTemp - 5 - tempDrop);
+                    const newHumidity = Math.min(100, baseHumidity + humidIncrease);
+                    const newDesc = finalRainfall > 25 ? 'heavy rain' : finalRainfall > 10 ? 'moderate rain' : finalRainfall > 0 ? 'light rain' : 'clear';
+
+                    const card = document.createElement('div');
+                    card.className = 'simulated-card';
+                    card.dataset.day = day;
+                    card.dataset.tempMax = newTempMax.toFixed(1);
+                    card.dataset.tempMin = newTempMin.toFixed(1);
+                    card.dataset.humidity = newHumidity.toFixed(1);
+                    card.dataset.desc = newDesc;
+                    card.dataset.rain = finalRainfall;
+                    card.innerHTML = `<div>Day ${day}</div><div>Max: ${newTempMax.toFixed(1)}°C</div><div>Min: ${newTempMin.toFixed(1)}°C</div><div>${newDesc}</div><div>Hum: ${newHumidity.toFixed(1)}%</div><div>Rain: ${finalRainfall}mm</div>`;
+                    simulatedForecast.appendChild(card);
+                }
+
+                const cards = simulatedForecast.getElementsByClassName('simulated-card');
+                for (let card of cards) {
+                    card.onclick = function() {
+                        const day = parseInt(this.dataset.day);
+                        let newTempMax = prompt(`Enter new Max Temp (°C) for Day ${day} (current: ${this.dataset.tempMax}):`, this.dataset.tempMax);
+                        let newTempMin = prompt(`Enter new Min Temp (°C) for Day ${day} (current: ${this.dataset.tempMin}):`, this.dataset.tempMin);
+                        let newHumidity = prompt(`Enter new Humidity (%) for Day ${day} (current: ${this.dataset.humidity}):`, this.dataset.humidity);
+                        let newRain = prompt(`Enter new Rainfall (mm) for Day ${day} (current: ${this.dataset.rain}):`, this.dataset.rain);
+                        if (newTempMax === null || newTempMin === null || newHumidity === null || newRain === null) return;
+
+                        newTempMax = parseFloat(newTempMax) || parseFloat(this.dataset.tempMax);
+                        newTempMin = parseFloat(newTempMin) || parseFloat(this.dataset.tempMin);
+                        newHumidity = parseFloat(newHumidity) || parseFloat(this.dataset.humidity);
+                        newRain = parseFloat(newRain) || parseFloat(this.dataset.rain);
+                        newTempMax = Math.max(-50, Math.min(newTempMax, 60));
+                        newTempMin = Math.max(-50, Math.min(newTempMin, 60));
+                        newHumidity = Math.max(0, Math.min(newHumidity, 100));
+                        newRain = Math.max(0, Math.min(newRain, 100));
+
+                        const oldTempMax = parseFloat(this.dataset.tempMax);
+                        const oldTempMin = parseFloat(this.dataset.tempMin);
+                        const oldHumidity = parseFloat(this.dataset.humidity);
+                        const oldRain = parseFloat(this.dataset.rain);
+                        this.dataset.tempMax = newTempMax.toFixed(1);
+                        this.dataset.tempMin = newTempMin.toFixed(1);
+                        this.dataset.humidity = newHumidity.toFixed(1);
+                        this.dataset.rain = newRain.toFixed(1);
+                        this.dataset.desc = newRain > 25 ? 'heavy rain' : newRain > 10 ? 'moderate rain' : newRain > 0 ? 'light rain' : 'clear';
+                        this.innerHTML = `<div>Day ${day}</div><div>Max: ${this.dataset.tempMax}°C</div><div>Min: ${this.dataset.tempMin}°C</div><div>${this.dataset.desc}</div><div>Hum: ${this.dataset.humidity}%</div><div>Rain: ${this.dataset.rain}mm</div>`;
+
+                        for (let nextCard of cards) {
+                            const nextDay = parseInt(nextCard.dataset.day);
+                            if (nextDay > day) {
+                                const dayDiff = nextDay - day;
+                                const decay = 1 - dayDiff / 6;
+                                nextCard.dataset.tempMax = (parseFloat(nextCard.dataset.tempMax) + (newTempMax - oldTempMax) * decay).toFixed(1);
+                                nextCard.dataset.tempMin = (parseFloat(nextCard.dataset.tempMin) + (newTempMin - oldTempMin) * decay).toFixed(1);
+                                nextCard.dataset.humidity = (parseFloat(nextCard.dataset.humidity) + (newHumidity - oldHumidity) * decay).toFixed(1);
+                                nextCard.dataset.rain = (parseFloat(nextCard.dataset.rain) + (newRain - oldRain) * decay).toFixed(1);
+                                nextCard.dataset.desc = parseFloat(nextCard.dataset.rain) > 25 ? 'heavy rain' : parseFloat(nextCard.dataset.rain) > 10 ? 'moderate rain' : parseFloat(nextCard.dataset.rain) > 0 ? 'light rain' : 'clear';
+                                nextCard.dataset.tempMax = Math.max(-50, Math.min(parseFloat(nextCard.dataset.tempMax), 60)).toFixed(1);
+                                nextCard.dataset.tempMin = Math.max(-50, Math.min(parseFloat(nextCard.dataset.tempMin), 60)).toFixed(1);
+                                nextCard.dataset.humidity = Math.max(0, Math.min(parseFloat(nextCard.dataset.humidity), 100)).toFixed(1);
+                                nextCard.dataset.rain = Math.max(0, Math.min(parseFloat(nextCard.dataset.rain), 100)).toFixed(1);
+                                nextCard.innerHTML = `<div>Day ${nextDay}</div><div>Max: ${nextCard.dataset.tempMax}°C</div><div>Min: ${nextCard.dataset.tempMin}°C</div><div>${nextCard.dataset.desc}</div><div>Hum: ${nextCard.dataset.humidity}%</div><div>Rain: ${nextCard.dataset.rain}mm</div>`;
+                            }
+                        }
+                    };
+                }
+            });
+        }
+
+        window.onload = function() {
+            document.getElementById('Latitude').value = 10.78; // Default to Ho Chi Minh City
+            document.getElementById('Longitude').value = 106.70;
+        };
+    </script>
+</body>
+</html>

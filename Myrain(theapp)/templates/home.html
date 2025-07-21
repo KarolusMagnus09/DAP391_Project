@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MyRain</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: auto;
+            overflow-y: auto;
+            background-color: #142038;
+            font-family: 'Arial', sans-serif;
+        }
+        .navbar {
+            background-color: #142038;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px;
+            z-index: 1;
+            text-align: center;
+        }
+        .index-section {
+            background-color: #e4eaf2;
+            padding-top: 80px;
+            padding-bottom: 40px;
+            text-align: center;
+            color: #1a2a44;
+            min-height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+        h1 {
+            font-size: 2.5em;
+            margin: 10px 0;
+        }
+        h2 {
+            font-size: 1.5em;
+            color: #1e90ff;
+            margin: 15px 0;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        li {
+            font-size: 1.2em;
+            margin: 10px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+        li::before {
+            content: "🌧️";
+            position: absolute;
+            left: 0;
+            color: #00ced1;
+        }
+        p {
+            max-width: 700px;
+            margin: 15px auto;
+            line-height: 1.6;
+        }
+        .link-wrapper {
+            display: inline-block;
+            margin: 0 16px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        {% for name, normal, active in [
+            ("Index", "index.png", "index2.png"),
+            ("Predict", "predict.png", "predict2.png"),
+            ("About", "about.png", "about2.png"),
+            ("Blog", "blog.png", "blog2.png")
+        ] %}
+            <a href="{{ '/' if name == 'Index' else url_for(name.lower()) }}"
+               onclick="return scrollSmoothly(event, '{{ '#' + name.lower() if name == 'Index' else '' }}')">
+                <div class="link-wrapper">
+                    <div class="fallback">{{ name }}</div>
+                    <div class="img-wrapper">
+                        <img src="{{ url_for('static', filename=normal) }}" class="normal">
+                    </div>
+                </div>
+            </a>
+        {% endfor %}
+    </nav>
+
+    <section class="index-section" id="index">
+        <h1>MyRain</h1>
+        <p>Welcome to a dynamic platform designed to explore and predict rainfall using real meteorological data. Whether you're a curious mind, a planner, or a weather enthusiast, this hub offers valuable insights tailored for you.</p>
+
+        <h2>Explore the Features:</h2>
+        <ul>
+            <li>Index – Your starting point, filled with engaging content and tools.</li>
+            <li>Predict – Input weather variables (e.g., humidity, pressure) for instant predictions.</li>
+            <li>About – Dive into rainfall’s impact on Vietnam’s economy and agriculture.</li>
+            <li>Blog –  Check out your location of choosing weather.</li>
+        </ul>
+
+        <p>Our goal is to make this web able to predict the rain correctly as possible, this is still in progress!</p>
+    </section>
+
+    <script>
+        function scrollSmoothly(event, target) {
+            if (target) {
+                event.preventDefault();
+                const element = document.querySelector(target);
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+                return false;
+            }
+            return true;
+        }
+    </script>
+</body>
+</html>
