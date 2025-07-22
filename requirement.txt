@@ -6,3 +6,13 @@ statsmodels
 scikit-learn
 xgboost
 ipython  # for IPython.display
+flask
+pandas
+numpy
+matplotlib
+seaborn
+scikit-learn
+xgboost
+statsmodels
+ipython
+requests
